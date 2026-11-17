@@ -1,0 +1,6 @@
+-r requirements.txt
+jupyterlab
+matplotlib
+seaborn
+pytest
+httpx
