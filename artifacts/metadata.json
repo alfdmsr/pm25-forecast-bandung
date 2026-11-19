@@ -1,0 +1,67 @@
+{
+  "versi_model": "1.0.0",
+  "algoritma": "HistGradientBoostingRegressor",
+  "parameter": {
+    "learning_rate": 0.03,
+    "max_iter": 600
+  },
+  "fitur_masukan": [
+    "pm25_ugm3",
+    "suhu_C",
+    "kelembaban_pct",
+    "kecepatan_angin_ms",
+    "curah_hujan_mm",
+    "angin_sin",
+    "angin_cos",
+    "jam_sin",
+    "jam_cos",
+    "bulan_sin",
+    "bulan_cos",
+    "st_Dago",
+    "st_Soekarno-Hatta",
+    "st_Cibeureum",
+    "st_Antapani",
+    "st_Ujungberung"
+  ],
+  "stasiun": [
+    "Dago",
+    "Soekarno-Hatta",
+    "Cibeureum",
+    "Antapani",
+    "Ujungberung"
+  ],
+  "rentang_pm25_latih": [
+    1.0,
+    128.4
+  ],
+  "threshold": {
+    "peringatan_ugm3": 39,
+    "alasan": "ambang terbesar dengan recall >= 0.7 di validation"
+  },
+  "metrik": {
+    "validation": {
+      "baseline_persistence": {
+        "MAE": 6.235,
+        "recall_55": 0.186,
+        "precision_55": 0.186
+      },
+      "model": {
+        "MAE": 4.673,
+        "recall_55": 0.721,
+        "precision_55": 0.207
+      }
+    },
+    "test": {
+      "baseline_persistence": {
+        "MAE": 6.511,
+        "recall_55": 0.301,
+        "precision_55": 0.305
+      },
+      "model": {
+        "MAE": 4.599,
+        "recall_55": 0.937,
+        "precision_55": 0.205
+      }
+    }
+  }
+}
