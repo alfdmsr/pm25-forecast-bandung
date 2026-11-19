@@ -4,8 +4,14 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .ipynb_checkpoints/
+*.log
+
 notebooks/
 reports/
-KONTEKS.md
 README_TIM.md
-*.log
+
+data/*.csv
+
+.env
+.env.*
+.streamlit/secrets.toml

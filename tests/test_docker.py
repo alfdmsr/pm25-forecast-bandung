@@ -1,9 +1,4 @@
-"""Tes smoke container: build image, nyalakan, tanya /health dan /predict.
-
-Dilewati secara bawaan karena build pertama 5-8 menit. Jalankan dengan:
-
-    JALANKAN_DOCKER=1 .venv/bin/python -m pytest tests/test_docker.py -q -s
-"""
+# Tes smoke container: build image, nyalakan, tanya /health dan /predict.
 
 import json
 import os
@@ -19,6 +14,13 @@ import pytest
 
 DOCKER = shutil.which("docker")
 AKAR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# PM25_IMAGE           : pakai image yang sudah dibangun, lewati langkah build.
+# DOCKER_BUILD_NETWORK : teruskan --network ke docker build (mis. "host").
+# DOCKER_RUN_NETWORK   : teruskan --network ke docker run (mis. "host").
+GAMBAR_SIAP = os.environ.get("PM25_IMAGE")
+JARINGAN_BUILD = os.environ.get("DOCKER_BUILD_NETWORK")
+JARINGAN_JALAN = os.environ.get("DOCKER_RUN_NETWORK")
 
 pytestmark = pytest.mark.skipif(
     DOCKER is None or os.environ.get("JALANKAN_DOCKER") != "1",
@@ -68,22 +70,37 @@ def kirim(url, muatan):
 
 @pytest.fixture(scope="module")
 def kontainer():
-    tag = f"pm25-smoke:{uuid.uuid4().hex[:8]}"
     nama = f"pm25-smoke-{uuid.uuid4().hex[:8]}"
     port = port_bebas()
 
-    subprocess.run([DOCKER, "build", "-t", tag, "."], cwd=AKAR, check=True)
-    subprocess.run(
-        [DOCKER, "run", "-d", "--name", nama,
-         "-e", "LAYANAN=api", "-p", f"127.0.0.1:{port}:7860", tag],
-        check=True, capture_output=True, text=True,
-    )
+    if GAMBAR_SIAP:
+        tag = GAMBAR_SIAP
+        dibangun = False
+        subprocess.run([DOCKER, "image", "inspect", tag], check=True, capture_output=True)
+    else:
+        tag = f"pm25-smoke:{uuid.uuid4().hex[:8]}"
+        dibangun = True
+        perintah = [DOCKER, "build"]
+        if JARINGAN_BUILD:
+            perintah += ["--network", JARINGAN_BUILD]
+        perintah += ["-t", tag, "."]
+        subprocess.run(perintah, cwd=AKAR, check=True)
+
+    perintah = [DOCKER, "run", "-d", "--name", nama, "-e", "LAYANAN=api"]
+    if JARINGAN_JALAN:
+        # Jaringan host: tanpa port mapping, container memakai PORT sendiri
+        perintah += ["--network", JARINGAN_JALAN, "-e", f"PORT={port}"]
+    else:
+        perintah += ["-p", f"127.0.0.1:{port}:7860"]
+    perintah.append(tag)
+    subprocess.run(perintah, check=True, capture_output=True, text=True)
 
     try:
         yield {"url": f"http://127.0.0.1:{port}", "nama": nama}
     finally:
         subprocess.run([DOCKER, "rm", "-f", nama], check=False, capture_output=True)
-        subprocess.run([DOCKER, "rmi", "-f", tag], check=False, capture_output=True)
+        if dibangun:                      # jangan hapus image milik pengguna
+            subprocess.run([DOCKER, "rmi", "-f", tag], check=False, capture_output=True)
 
 
 def test_health_di_dalam_container(kontainer):
