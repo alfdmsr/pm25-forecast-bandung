@@ -97,11 +97,6 @@ tanpa menyalin file.
 Model disimpan dengan scikit-learn 1.9.1. Jika model dilatih ulang dengan versi lain, samakan versi di
 `requirements.txt`.
 
-### Deploy ke Streamlit Community Cloud
-
-Buka share.streamlit.io, pilih **Create app**, lalu isi repo ini, branch `main`, dan file utama
-`app/ui/streamlit_app.py`.
-
 ## Struktur repositori
 
 ```
@@ -137,14 +132,3 @@ requirements.txt
   sehingga tidak dipakai agar masukan aplikasi tetap sederhana.
 
 Jika dipakai sungguhan, MAE mingguan dan ketepatan peringatan perlu dipantau, dan model dilatih ulang secara berkala.
-
-## Daftar periksa sebelum dikumpulkan
-
-- [ ] Repositori bersifat publik dan setiap anggota memiliki *commit*
-- [ ] *Notebook* dapat dijalankan ulang dari awal sampai akhir tanpa galat
-- [x] *Baseline* wajib dilaporkan dan dibandingkan
-- [x] Data *test* hanya dibuka satu kali, di akhir
-- [x] `artifacts/metadata.json` berisi versi model, fitur masukan, *threshold*, dan metrik
-- [ ] Aplikasi dapat dibuka orang lain melalui tautan, termasuk dari ponsel
-- [x] Aplikasi tidak berhenti mendadak ketika menerima masukan yang tidak wajar
-- [ ] Laporan paling banyak 6 halaman dan video paling lama 5 menit
