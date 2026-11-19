@@ -6,5 +6,5 @@ matplotlib>=3.8
 seaborn>=0.13
 fastapi>=0.110
 uvicorn>=0.29
-streamlit>=1.35
+streamlit>=1.50
 requests>=2.31
