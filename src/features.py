@@ -1,8 +1,6 @@
-"""Fungsi pembuat fitur untuk prakiraan PM2.5 tiga jam ke depan.
+# Fungsi pembuat fitur untuk prakiraan PM2.5 tiga jam ke depan.
 
-Dipakai saat pelatihan (buat_fitur) dan saat prediksi di aplikasi (fitur_dari_input),
-supaya fitur yang dipakai selalu sama.
-"""
+
 import numpy as np
 import pandas as pd
 

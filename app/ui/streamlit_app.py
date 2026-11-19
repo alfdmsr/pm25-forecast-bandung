@@ -1,12 +1,5 @@
-"""Aplikasi prakiraan PM2.5 untuk warga dan petugas dinas.
+# Aplikasi prakiraan PM2.5 untuk warga dan petugas dinas.
 
-Jalankan dari folder utama repo:
-    streamlit run app/ui/streamlit_app.py
-
-Secara bawaan aplikasi memuat model langsung dari GitHub.
-Jika variabel lingkungan PM25_API_URL diisi (misalnya http://127.0.0.1:8000),
-prakiraan diminta ke API tersebut.
-"""
 import os
 import sys
 from datetime import datetime, timedelta, timezone
@@ -200,6 +193,5 @@ if metadata:
   <p>{metadata['algoritma']} versi {metadata['versi_model']}. Peringatan diberikan jika prakiraan di atas
   {metadata['threshold']['peringatan_ugm3']} µg/m³. Kategori: baik sampai 15,5, sedang sampai 55,
   tidak sehat di atas 55 µg/m³.</p>
-  <p>Model dilatih dengan data sintetis untuk tugas kuliah.</p>
 </div>
 """, unsafe_allow_html=True)
