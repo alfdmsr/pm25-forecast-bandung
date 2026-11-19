@@ -36,6 +36,17 @@ def status():
 def info_model():
     return metadata
 
+@app.get("/health")
+def health():
+    """Dipakai container/platform untuk memastikan artefak termuat utuh."""
+    jumlah = getattr(model, "n_features_in_", None)
+    diharapkan = len(metadata.get("fitur_masukan", []))
+    if jumlah != diharapkan:
+        raise HTTPException(
+            status_code=503,
+            detail="Model dan metadata tidak sinkron; artefak perlu dimuat ulang",
+        )
+    return {"status": "ok", "versi_model": metadata.get("versi_model"), "jumlah_fitur": jumlah}
 
 @app.post("/predict")
 def predict(masukan: Masukan):
