@@ -1,19 +1,20 @@
-# Prakiraan PM2.5 Bandung - Tim [nama tim]
+# Prakiraan PM2.5 Bandung · Tim Alif-Tyas
 
-**Kasus:** 06 Prakiraan PM2.5 Bandung | **Aplikasi:** [tautan aplikasi] | **Video:** [tautan video]
+**Kasus:** 06 Prakiraan PM2.5 Bandung · **Aplikasi:** (https://pm25-bandung.streamlit.app/) · **Video:** [tautan video]
 
 | Anggota | NIM | Bagian yang dikerjakan |
 |---|---|---|
-| [nama] | [NIM] | [misalnya EDA dan pembersihan data] |
-| [nama] | [NIM] | [misalnya model dan evaluasi] |
-| [nama] | [NIM] | [misalnya API dan aplikasi] |
+| Muhammad Alif Dhiyaumasrur | 2400723 | Setup project, API, aplikasi Streamlit, pengujian, deploy, Laporan |
+| Tyas Panggih Adi Putro | 2406264 | EDA, pembersihan data, Fitur, pelatihan model, evaluasi, dan threshold |
 
 ## Masalah dan pengguna
 
 Tim kesehatan lingkungan dinas kota ingin memberi peringatan kepada warga sebelum udara memburuk. Model ini
 memprakirakan PM2.5 tiga jam ke depan di lima stasiun (Dago, Soekarno-Hatta, Cibeureum, Antapani, Ujungberung)
-dari kondisi udara dan cuaca saat ini. Warga dan petugas dinas memakai hasilnya untuk memutuskan apakah perlu
-mengumumkan peringatan, misalnya agar penderita asma memakai masker.
+dari kondisi udara dan cuaca saat ini. Pengguna langsung aplikasi adalah petugas dinas, yang memasukkan kondisi
+terkini satu stasiun lalu membaca prakiraan tiga jam ke depan; penerima manfaat akhirnya adalah warga, khususnya
+penderita asma, anak, dan lansia. Kesalahan yang tidak setara menjadi dasar pemilihan metrik: peringatan yang
+terlewat lebih merugikan daripada alarm palsu, sehingga selain MAE dipantau juga recall pada jam tidak sehat.
 
 ## Data dan pembersihan
 
@@ -22,7 +23,7 @@ Data: 87.650 baris per jam dari Juli 2024 sampai Juni 2026, lima stasiun. Setela
 | Masalah yang ditemukan | Jumlah baris | Cara menangani |
 |---|---|---|
 | Nama stasiun ditulis dengan 16 variasi (spasi, huruf besar, "SOETTA") | 2.635 | disatukan ke 5 nama baku |
-| Baris duplikat persis | 398 | dihapus |
+| Baris duplikat persis | 398 | dihapus dengan `drop_duplicates` |
 | Waktu Soekarno-Hatta Juli-September 2025 tercatat dalam UTC, bukan WIB | 2.196 | digeser +7 jam |
 | PM2.5 berisi kode -999 (sensor gagal baca) | 172 | diubah ke NaN |
 | PM2.5 tepat 0 di antara nilai normal | 87 | diubah ke NaN |
@@ -50,7 +51,7 @@ alarm palsu. Angka ini adalah ambang terbesar yang masih menangkap minimal 70% j
 
 ## Cara menjalankan
 
-Butuh Python 3.10 atau lebih baru. Jalankan semua perintah dari folder utama repo.
+Butuh Python 3.11–3.13 (disarankan 3.12). Jalankan semua perintah dari folder utama repo.
 
 ```bash
 pip install -r requirements.txt
@@ -61,7 +62,8 @@ streamlit run app/ui/streamlit_app.py   # aplikasi, terbuka di http://localhost:
 Di Windows, jika perintah `streamlit` atau `uvicorn` tidak dikenali, pakai `python -m streamlit run ...` dan
 `python -m uvicorn ...`.
 
-Aplikasi dan API mengunduh `artifacts/model.joblib` dan `artifacts/metadata.json` dari repo ini saat dijalankan.
+Aplikasi dan API mengunduh `artifacts/model.joblib` dan `artifacts/metadata.json` dari repo ini saat dijalankan,
+jadi butuh koneksi internet dan repo yang publik.
 Secara bawaan aplikasi Streamlit menghitung prakiraan sendiri. Agar aplikasi meminta prakiraan ke API, jalankan API
 lalu isi variabel lingkungan `PM25_API_URL`:
 
@@ -69,6 +71,20 @@ lalu isi variabel lingkungan `PM25_API_URL`:
 set PM25_API_URL=http://127.0.0.1:8000        # Windows (Command Prompt)
 export PM25_API_URL=http://127.0.0.1:8000     # macOS / Linux
 streamlit run app/ui/streamlit_app.py
+```
+
+Menjalankan tes:
+
+```bash
+python -m pytest -q   # 47 lulus, 4 dilewati (tes Docker opsional)
+```
+
+Versi container (satu image, dua peran):
+
+```bash
+docker build -t pm25-bandung .
+docker run -p 7860:7860 -e LAYANAN=ui pm25-bandung    # aplikasi Streamlit
+docker run -p 7860:7860 -e LAYANAN=api pm25-bandung   # API saja, dokumentasi di /docs
 ```
 
 Contoh permintaan ke API:
@@ -94,8 +110,9 @@ tanpa menyalin file.
 2. Jalankan `notebooks/02_modeling.ipynb`. Notebook membaca `data/clean.csv` dan `src/features.py`, lalu
    menyimpan `artifacts/model.joblib` dan `artifacts/metadata.json`. Upload folder `artifacts/` ke repo.
 
-Model disimpan dengan scikit-learn 1.9.1. Jika model dilatih ulang dengan versi lain, samakan versi di
-`requirements.txt`.
+Model disimpan dengan scikit-learn 1.9.1, sedangkan `requirements.txt` memakai 1.7.2. Perbedaan ini hanya
+memunculkan peringatan `InconsistentVersionWarning` saat model dimuat dan tidak memengaruhi hasil (MAE test
+4,602 vs 4,599). Jika model dilatih ulang dengan versi lain, samakan versi di `requirements.txt`.
 
 ## Struktur repositori
 
@@ -113,8 +130,11 @@ artifacts/
   model.joblib                   model final
   metadata.json                  versi model, fitur masukan, threshold, dan metrik
 app/
-  api/main.py                    API (FastAPI)
+  api/main.py                    API (FastAPI): /, /metadata, /health, /predict
   ui/streamlit_app.py            antarmuka (Streamlit)
+tests/                           tes fitur, predict, API, /health, artefak, dan Docker
+Dockerfile                       dua mode: LAYANAN=ui atau LAYANAN=api
+start.sh                         menjalankan API/UI di dalam container
 .streamlit/config.toml           warna tema aplikasi
 requirements.txt
 ```
@@ -130,5 +150,7 @@ requirements.txt
   perubahan lalu lintas besar.
 - Fitur riwayat PM2.5 dan PM2.5 stasiun lain sudah dicoba, tetapi hanya memperbaiki MAE validation sekitar 1%,
   sehingga tidak dipakai agar masukan aplikasi tetap sederhana.
+- Aplikasi bukan pemantauan waktu nyata: kondisi terkini diisi manual petugas, dan cuaca hari ini belum tersedia
+  dari sumber otomatis.
 
 Jika dipakai sungguhan, MAE mingguan dan ketepatan peringatan perlu dipantau, dan model dilatih ulang secara berkala.
